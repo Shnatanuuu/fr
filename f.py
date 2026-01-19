@@ -1,7 +1,7 @@
 import streamlit as st
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, Table
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
@@ -81,8 +81,17 @@ CHINESE_CITIES = {
     "Lhasa": "拉萨"
 }
 
-# Sample types
-SAMPLE_TYPES = {
+# Sample types - separate for English and Chinese
+SAMPLE_TYPES_EN = {
+    "Dev.sample": "Development Sample",
+    "Cfm sample": "Confirmation Sample",
+    "Fit sample": "Fitting Sample",
+    "Size set": "Size Set Sample",
+    "TOP sample": "Production Sample",
+    "Shipment sample": "Shipment Sample"
+}
+
+SAMPLE_TYPES_ZH = {
     "Dev.sample": "开发样",
     "Cfm sample": "确认样",
     "Fit sample": "试穿样",
@@ -330,31 +339,38 @@ def get_text(key, fallback=None):
     
     # Base English texts
     texts = {
+        # Titles and Headers
         "title": "Factory Sample Review Report",
         "basic_info": "Basic Information",
         "measurements": "Sample Measurements",
         "sample_review": "Sample Review",
         "conclusion": "Conclusion",
         "signatures": "Signatures",
+        
+        # Buttons
         "generate_pdf": "Generate PDF Report",
         "download_pdf": "Download PDF Report",
-        "style_no": "Style No. / 型体",
-        "size": "Size / 码数",
-        "factory": "Factory / 工厂",
-        "purpose": "Purpose / 类型",
-        "brand": "Brand / 品牌",
-        "last_no": "Last No. / 楦号",
-        "sales": "Sales / 业务",
-        "new_old": "New/Old / 新旧",
-        "outsole_no": "Outsole NO. / 大底",
-        "review_date": "Review Date / 日期",
-        "check_items": "Check Items / 核查项目",
-        "first": "First / 第一次",
-        "second": "Second / 第二次",
-        "third": "Third / 第三次",
-        "fourth": "Fourth / 第四次",
+        
+        # Form Fields
+        "style_no": "Style No.",
+        "size": "Size",
+        "factory": "Factory",
+        "purpose": "Purpose",
+        "brand": "Brand",
+        "last_no": "Last No.",
+        "sales": "Sales",
+        "new_old": "New/Old",
+        "outsole_no": "Outsole NO.",
+        "review_date": "Review Date",
+        "check_items": "Check Items",
+        "first": "First",
+        "second": "Second",
+        "third": "Third",
+        "fourth": "Fourth",
         "measurement_details": "Measurement Details",
-        "picture": "Picture / 图片",
+        "picture": "Picture",
+        
+        # Footer and Messages
         "footer_text": "Factory Sample Review System",
         "generate_success": "PDF Generated Successfully!",
         "fill_required": "Please fill in at least Style No. and Factory!",
@@ -376,7 +392,6 @@ def get_text(key, fallback=None):
         "conclusion_note": "Conclusion & Notes",
         "disclaimer": "Disclaimer",
         "disclaimer_text": "Note: This review information does not release the factory from any responsibilities in the event of claims being received from our customer.",
-        "disclaimer_text_chinese": "以上不免除我客人收到货后索赔而引起的货物供应商(工厂)的任何责任.",
         "measurement_check": "Measurement Check Items",
         "add_measurement": "Add Measurement Point",
         "grandstep_tech": "GrandStep Tech",
@@ -390,11 +405,128 @@ def get_text(key, fallback=None):
         return translate_text(text, "zh")
     return text
 
-def translate_pdf_content(text, pdf_lang):
-    """Translate text for PDF based on selected language"""
-    if pdf_lang == "en" or not openai_client:
-        return text
-    return translate_text(text, "zh")
+# PDF text based on selected language
+def get_pdf_text(key, pdf_lang):
+    """Get text for PDF based on selected language"""
+    # English texts for PDF
+    pdf_texts_en = {
+        "title": "Factory Sample Review Report",
+        "page_num": "Page# 1",
+        "style_no": "Style No.",
+        "size": "Size",
+        "factory": "Factory",
+        "purpose": "Purpose",
+        "brand": "Brand",
+        "last_no": "Last No.",
+        "sales": "Sales",
+        "new_old": "New/Old",
+        "outsole_no": "Outsole NO.",
+        "review": "Review",
+        "check_items": "Check Items",
+        "first": "First",
+        "second": "Second",
+        "third": "Third",
+        "fourth": "Fourth",
+        "conclusion": "Conclusion",
+        "disclaimer": "Note: This review information does not release the factory from any responsibilities in the event of claims being received from our customer.",
+        "grandstep_tech": "GrandStep Tech:",
+        "factory_rep": "Factory Representative:",
+        "after": "After",
+        "before": "Before",
+        "location": "Location:",
+        "header": "FACTORY SAMPLE REVIEW REPORT"
+    }
+    
+    # Chinese texts for PDF
+    pdf_texts_zh = {
+        "title": "样品技术核查表",
+        "page_num": "页码# 1",
+        "style_no": "型体",
+        "size": "码数",
+        "factory": "工厂",
+        "purpose": "类型",
+        "brand": "品牌",
+        "last_no": "楦号",
+        "sales": "业务",
+        "new_old": "新旧",
+        "outsole_no": "大底",
+        "review": "日期",
+        "check_items": "核查项目",
+        "first": "第一次",
+        "second": "第二次",
+        "third": "第三次",
+        "fourth": "第四次",
+        "conclusion": "结论",
+        "disclaimer": "以上不免除我客人收到货后索赔而引起的货物供应商(工厂)的任何责任.",
+        "grandstep_tech": "GrandStep技术代表:",
+        "factory_rep": "工厂代表:",
+        "after": "后置",
+        "before": "前置",
+        "location": "地点:",
+        "header": "样品技术核查报告"
+    }
+    
+    if pdf_lang == "en":
+        return pdf_texts_en.get(key, key)
+    else:
+        return pdf_texts_zh.get(key, key)
+
+# Measurement items in both languages
+MEASUREMENT_ITEMS_EN = {
+    "left": [
+        ("Last Length", "Last Length"),
+        ("Toe Girth", "Toe Girth"),
+        ("Ball Girth", "Ball Girth"),
+        ("Waist Girth", "Waist Girth"),
+        ("Instep Girth", "Instep Girth"),
+        ("Vamp length", "Vamp length"),
+        ("Back Height", "Back Height"),
+        ("Boot Height", "Boot Height"),
+        ("Boot top Width", "Boot top Width"),
+        ("Boot Calf Width", "Boot Calf Width"),
+        ("Ankle Width", "Ankle Width")
+    ],
+    "right": [
+        ("Toe Width", "Toe Width"),
+        ("Bottom Width", "Bottom Width"),
+        ("Heel Seat Width", "Heel Seat Width"),
+        ("Heel to Instep Girth", "Heel to Instep Girth"),
+        ("Toe Spring", "Toe Spring"),
+        ("Thickness", "Thickness"),
+        ("Shank", "Shank"),
+        ("Mid-sole", "Mid-sole"),
+        ("Outsole Degree", "Outsole Degree"),
+        ("Sock Foam", "Sock Foam")
+    ]
+}
+
+MEASUREMENT_ITEMS_ZH = {
+    "left": [
+        ("楦长", "楦长"),
+        ("趾围", "趾围"),
+        ("掌围", "掌围"),
+        ("腰围", "腰围"),
+        ("背围", "背围"),
+        ("鞋口长度", "鞋口长度"),
+        ("后跟高度", "后跟高度"),
+        ("靴筒高度", "靴筒高度"),
+        ("靴筒宽度", "靴筒宽度"),
+        ("小腿宽度", "小腿宽度"),
+        ("脚踝宽度", "脚踝宽度")
+    ],
+    "right": [
+        ("趾宽", "趾宽"),
+        ("掌宽", "掌宽"),
+        ("后跟宽度", "后跟宽度"),
+        ("后跟到脚背长度", "后跟到脚背长度"),
+        ("鞋头翘度", "鞋头翘度"),
+        ("厚度", "厚度"),
+        ("钢芯", "钢芯"),
+        ("中底", "中底"),
+        ("大底硬度", "大底硬度"),
+        ("鞋垫", "鞋垫")
+    ]
+}
 
 # PDF Generation with Headers and Footers
 class SampleReviewPDF(SimpleDocTemplate):
@@ -424,7 +556,7 @@ class SampleReviewPDF(SimpleDocTemplate):
                 self.canv.setFont('Helvetica-Bold', font_size)
                 
             self.canv.setFillColor(colors.white)
-            header_title = "FACTORY SAMPLE REVIEW REPORT"
+            header_title = get_pdf_text("header", self.pdf_language)
             self.canv.drawCentredString(
                 self.pagesize[0]/2.0, 
                 self.pagesize[1] - 0.4*inch, 
@@ -457,19 +589,24 @@ class SampleReviewPDF(SimpleDocTemplate):
         china_tz = pytz.timezone('Asia/Shanghai')
         current_time = datetime.now(china_tz)
         
+        location_info = f"{get_pdf_text('location', self.pdf_language)} {self.selected_city}"
         if self.pdf_language == "zh" and self.chinese_city:
-            location_info = f"地点: {self.selected_city} ({self.chinese_city})"
-        else:
-            location_info = f"Location: {self.selected_city}"
+            location_info = f"{get_pdf_text('location', self.pdf_language)} {self.selected_city} ({self.chinese_city})"
         
         self.canv.drawString(0.5*inch, 0.25*inch, location_info)
         
         # Center: Timestamp
-        timestamp = f"Generated: {current_time.strftime('%Y-%m-%d %H:%M:%S')}"
+        if self.pdf_language == "zh":
+            timestamp = f"生成时间: {current_time.strftime('%Y-%m-%d %H:%M:%S')}"
+        else:
+            timestamp = f"Generated: {current_time.strftime('%Y-%m-%d %H:%M:%S')}"
         self.canv.drawCentredString(self.pagesize[0]/2.0, 0.25*inch, timestamp)
         
         # Right: Page number
-        page_num = f"Page {self.page}"
+        if self.pdf_language == "zh":
+            page_num = f"第 {self.page} 页"
+        else:
+            page_num = f"Page {self.page}"
         self.canv.drawRightString(self.pagesize[0] - 0.5*inch, 0.25*inch, page_num)
         
         self.canv.restoreState()
@@ -488,11 +625,8 @@ def generate_pdf():
     
     if pdf_lang == "zh":
         try:
-            try:
-                pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
-                chinese_font = 'STSong-Light'
-            except:
-                chinese_font = 'Helvetica'
+            pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
+            chinese_font = 'STSong-Light'
         except:
             chinese_font = 'Helvetica'
     
@@ -502,8 +636,8 @@ def generate_pdf():
         pagesize=letter,
         topMargin=0.8*inch,
         bottomMargin=0.8*inch,
-        header_text="FACTORY SAMPLE REVIEW REPORT",
-        location=f"{selected_city}",
+        header_text=get_pdf_text("header", pdf_lang),
+        location=selected_city,
         pdf_language=pdf_lang,
         selected_city=selected_city,
         chinese_city=chinese_city,
@@ -513,7 +647,7 @@ def generate_pdf():
     elements = []
     styles = getSampleStyleSheet()
     
-    # Create styles
+    # Create styles based on language
     title_font = 'Helvetica-Bold' if pdf_lang != "zh" else chinese_font
     normal_font = 'Helvetica' if pdf_lang != "zh" else chinese_font
     bold_font = 'Helvetica-Bold' if pdf_lang != "zh" else chinese_font
@@ -568,14 +702,6 @@ def generate_pdf():
         fontName=normal_font
     )
     
-    # Build the PDF content similar to the provided template
-    
-    # Title
-    elements.append(Spacer(1, 10))
-    elements.append(Paragraph("Factory Sample Review 样品技术核查表", title_style))
-    elements.append(Paragraph("Page# 1", subtitle_style))
-    elements.append(Spacer(1, 10))
-    
     # Helper function for creating paragraphs
     def create_paragraph(text, style=normal_style, bold=False):
         """Create paragraph with appropriate font"""
@@ -592,7 +718,14 @@ def generate_pdf():
         
         return Paragraph(text, custom_style)
     
-    # Basic Information Table (6 rows, 4 columns)
+    # Build the PDF content
+    elements.append(Spacer(1, 10))
+    
+    # Title based on language
+    elements.append(Paragraph(get_pdf_text("title", pdf_lang), title_style))
+    elements.append(Paragraph(get_pdf_text("page_num", pdf_lang), subtitle_style))
+    elements.append(Spacer(1, 10))
+    
     # Get values from session state
     style_no_val = st.session_state.get('style_no', '')
     size_val = st.session_state.get('size', '')
@@ -605,212 +738,188 @@ def generate_pdf():
     outsole_no_val = st.session_state.get('outsole_no', '')
     review_date_val = st.session_state.get('review_date', datetime.now())
     
-    # Sample type badge
-    purpose_display = purpose_val
-    if purpose_val in SAMPLE_TYPES:
-        purpose_display = f"{purpose_val} {SAMPLE_TYPES[purpose_val]}"
+    # Get appropriate sample type based on language
+    if pdf_lang == "zh":
+        purpose_display = SAMPLE_TYPES_ZH.get(purpose_val, purpose_val)
+    else:
+        purpose_display = SAMPLE_TYPES_EN.get(purpose_val, purpose_val)
     
+    # Basic Information Table - Single language based on PDF language
     basic_data = [
         [
-            create_paragraph("Style No.", bold=True), 
-            create_paragraph("型体", bold=True), 
+            create_paragraph(get_pdf_text("style_no", pdf_lang), bold=True), 
             create_paragraph(style_no_val),
-            create_paragraph("Size#", bold=True),
-            create_paragraph("码数", bold=True),
+            create_paragraph(get_pdf_text("size", pdf_lang), bold=True),
             create_paragraph(size_val)
         ],
         [
-            create_paragraph("Factory", bold=True), 
-            create_paragraph("工厂", bold=True), 
+            create_paragraph(get_pdf_text("factory", pdf_lang), bold=True), 
             create_paragraph(factory_val),
-            create_paragraph("Purpose", bold=True),
-            create_paragraph("类型", bold=True),
+            create_paragraph(get_pdf_text("purpose", pdf_lang), bold=True),
             create_paragraph(purpose_display)
         ],
         [
-            create_paragraph("Brand", bold=True), 
-            create_paragraph("品牌", bold=True), 
+            create_paragraph(get_pdf_text("brand", pdf_lang), bold=True), 
             create_paragraph(brand_val),
-            create_paragraph("Last No.", bold=True),
-            create_paragraph("楦号", bold=True),
+            create_paragraph(get_pdf_text("last_no", pdf_lang), bold=True),
             create_paragraph(last_no_val)
         ],
         [
-            create_paragraph("Sales", bold=True), 
-            create_paragraph("业务", bold=True), 
+            create_paragraph(get_pdf_text("sales", pdf_lang), bold=True), 
             create_paragraph(sales_val),
-            create_paragraph("New/Old", bold=True),
-            create_paragraph("新旧", bold=True),
+            create_paragraph(get_pdf_text("new_old", pdf_lang), bold=True),
             create_paragraph(new_old_val)
         ],
         [
-            create_paragraph("Outsole NO.", bold=True), 
-            create_paragraph("大底", bold=True), 
+            create_paragraph(get_pdf_text("outsole_no", pdf_lang), bold=True), 
             create_paragraph(outsole_no_val),
-            create_paragraph("Review", bold=True),
-            create_paragraph("日期", bold=True),
+            create_paragraph(get_pdf_text("review", pdf_lang), bold=True),
             create_paragraph(review_date_val.strftime('%Y-%m-%d') if hasattr(review_date_val, 'strftime') else str(review_date_val))
         ]
     ]
     
-    basic_table = Table(basic_data, colWidths=[0.8*inch, 0.6*inch, 1.2*inch, 0.8*inch, 0.6*inch, 1.2*inch])
+    basic_table = Table(basic_data, colWidths=[1.2*inch, 2.4*inch, 1.2*inch, 2.4*inch])
     basic_table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('BACKGROUND', (0, 0), (1, -1), colors.HexColor('#e0e0e0')),
-        ('BACKGROUND', (3, 0), (4, -1), colors.HexColor('#e0e0e0')),
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e0e0e0')),
+        ('BACKGROUND', (2, 0), (2, -1), colors.HexColor('#e0e0e0')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
     ]))
     elements.append(basic_table)
-    elements.append(Spacer(1, 10))
+    elements.append(Spacer(1, 15))
     
-    # Measurement Check Table
-    # Define the check items (left side)
-    check_items_left = [
-        ("Last Length", "楦长"),
-        ("Toe Girth", "趾围"),
-        ("Ball Girth", "掌围"),
-        ("Waist Girth", "腰围"),
-        ("Instep Girth", "背围"),
-        ("Vamp length:", "鞋口长度"),
-        ("Back Height:", "后跟高度"),
-        ("Boot Height:", "靴筒高度"),
-        ("Boot top Width:", "靴筒宽度"),
-        ("Boot Calf Width:", "小腿宽度Point 位置点 298"),
-        ("Ankle Width:", "脚踝宽度 Point 位置点 90mm")
-    ]
-    
-    # Define the check items (right side)
-    check_items_right = [
-        ("Toe Width", "趾  宽"),
-        ("Bottom Width", "掌  宽"),
-        ("Heel Seat Width", "后跟宽度"),
-        ("Heel to Instep Girth", "后跟到脚背长度"),
-        ("Toe Spring", "鞋头翘度"),
-        ("Sock Foam:", "鞋垫"),
-        ("Thickness:", "厚度"),
-        ("Shank:", "钢芯"),
-        ("Mid-sole:", "中底"),
-        ("Outsole Degree", "大底硬度")
-    ]
-    
-    # Create measurement data from session state
+    # Measurement Check Table - Single language
     measurement_data = []
     
-    # Header row
-    header_row = [
-        create_paragraph("Check Items", bold=True),
-        create_paragraph("核查项目", bold=True),
-        create_paragraph("First", bold=True),
-        create_paragraph("第一次", bold=True),
-        create_paragraph("Second", bold=True),
-        create_paragraph("第二次", bold=True),
-        create_paragraph("Third", bold=True),
-        create_paragraph("第三次", bold=True),
-        create_paragraph("Fourth", bold=True),
-        create_paragraph("第四次", bold=True),
-        create_paragraph("Check Items", bold=True),
-        create_paragraph("核查项目", bold=True),
-        create_paragraph("First", bold=True),
-        create_paragraph("第一次", bold=True),
-        create_paragraph("Second", bold=True),
-        create_paragraph("第二次", bold=True),
-        create_paragraph("Third", bold=True),
-        create_paragraph("第三次", bold=True),
-        create_paragraph("Fourth", bold=True),
-        create_paragraph("第四次", bold=True)
-    ]
-    measurement_data.append(header_row)
+    # Header row - only one set of headers
+    if pdf_lang == "zh":
+        check_items = MEASUREMENT_ITEMS_ZH
+    else:
+        check_items = MEASUREMENT_ITEMS_EN
+    
+    # Create two columns for measurements
+    left_items = check_items["left"]
+    right_items = check_items["right"]
     
     # Get maximum length for iteration
-    max_items = max(len(check_items_left), len(check_items_right))
+    max_items = max(len(left_items), len(right_items))
     
     for i in range(max_items):
         row = []
         
         # Left side items
-        if i < len(check_items_left):
-            item_en, item_zh = check_items_left[i]
+        if i < len(left_items):
+            item_name, item_key = left_items[i]
             # Get measurement values from session state
-            first_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_first', '')
-            second_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_second', '')
-            third_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_third', '')
-            fourth_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_fourth', '')
+            # Use English keys for session state regardless of language
+            if pdf_lang == "zh":
+                # For Chinese PDF, use English measurement items to get keys
+                eng_item = MEASUREMENT_ITEMS_EN["left"][i][1] if i < len(MEASUREMENT_ITEMS_EN["left"]) else ""
+            else:
+                eng_item = item_key
+            
+            if eng_item:
+                first_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_first', '')
+                second_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_second', '')
+                third_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_third', '')
+                fourth_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_fourth', '')
+            else:
+                first_val = second_val = third_val = fourth_val = ''
             
             row.extend([
-                create_paragraph(item_en),
-                create_paragraph(item_zh),
+                create_paragraph(item_name),
                 create_paragraph(first_val),
-                create_paragraph(""),
                 create_paragraph(second_val),
-                create_paragraph(""),
                 create_paragraph(third_val),
-                create_paragraph(""),
-                create_paragraph(fourth_val),
-                create_paragraph("")
+                create_paragraph(fourth_val)
             ])
         else:
             # Empty cells for left side
-            row.extend([create_paragraph("")] * 10)
+            row.extend([create_paragraph("")] * 5)
+        
+        # Add spacer column
+        row.append(create_paragraph(""))
         
         # Right side items
-        if i < len(check_items_right):
-            item_en, item_zh = check_items_right[i]
+        if i < len(right_items):
+            item_name, item_key = right_items[i]
             # Get measurement values from session state
-            first_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_first', '')
-            second_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_second', '')
-            third_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_third', '')
-            fourth_val = st.session_state.get(f'{item_en.lower().replace(":", "").replace(" ", "_")}_fourth', '')
+            # Use English keys for session state regardless of language
+            if pdf_lang == "zh":
+                # For Chinese PDF, use English measurement items to get keys
+                eng_item = MEASUREMENT_ITEMS_EN["right"][i][1] if i < len(MEASUREMENT_ITEMS_EN["right"]) else ""
+            else:
+                eng_item = item_key
+            
+            if eng_item:
+                first_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_first', '')
+                second_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_second', '')
+                third_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_third', '')
+                fourth_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_fourth', '')
+            else:
+                first_val = second_val = third_val = fourth_val = ''
             
             row.extend([
-                create_paragraph(item_en),
-                create_paragraph(item_zh),
+                create_paragraph(item_name),
                 create_paragraph(first_val),
-                create_paragraph(""),
                 create_paragraph(second_val),
-                create_paragraph(""),
                 create_paragraph(third_val),
-                create_paragraph(""),
-                create_paragraph(fourth_val),
-                create_paragraph("")
+                create_paragraph(fourth_val)
             ])
         else:
             # Empty cells for right side
-            row.extend([create_paragraph("")] * 10)
+            row.extend([create_paragraph("")] * 5)
         
         measurement_data.append(row)
     
-    # Add Sock Foam special row (After/Before)
-    sock_foam_after = st.session_state.get('sock_foam_after', '')
-    sock_foam_before = st.session_state.get('sock_foam_before', '')
-    
-    sock_row = [create_paragraph("")] * 20
-    sock_row[8] = create_paragraph("After 后置")
-    sock_row[9] = create_paragraph(sock_foam_after)
-    sock_row[10] = create_paragraph("Before 前置")
-    sock_row[11] = create_paragraph(sock_foam_before)
-    measurement_data.append(sock_row)
-    
     # Create the measurement table
-    measurement_table = Table(measurement_data, colWidths=[0.6*inch] * 20)
+    measurement_table = Table(measurement_data, colWidths=[1.2*inch, 0.6*inch, 0.6*inch, 0.6*inch, 0.6*inch, 0.2*inch, 1.2*inch, 0.6*inch, 0.6*inch, 0.6*inch, 0.6*inch])
     measurement_table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4a5568')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('BACKGROUND', (10, 0), (-1, 0), colors.HexColor('#4a5568')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTSIZE', (0, 0), (-1, -1), 7),
-        ('ROWBACKGROUNDS', (1, 1), (-1, -1), [colors.white, colors.HexColor('#f7fafc')])
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('ROWBACKGROUNDS', (0, 0), (-1, -1), [colors.white, colors.HexColor('#f7fafc')])
     ]))
     elements.append(measurement_table)
     elements.append(Spacer(1, 15))
     
+    # Sock Foam special section
+    if pdf_lang == "zh":
+        sock_foam_label = "鞋垫"
+    else:
+        sock_foam_label = "Sock Foam"
+    
+    sock_foam_after = st.session_state.get('sock_foam_after', '')
+    sock_foam_before = st.session_state.get('sock_foam_before', '')
+    
+    sock_data = [
+        [
+            create_paragraph(sock_foam_label, bold=True),
+            create_paragraph(get_pdf_text("after", pdf_lang)),
+            create_paragraph(sock_foam_after),
+            create_paragraph(get_pdf_text("before", pdf_lang)),
+            create_paragraph(sock_foam_before)
+        ]
+    ]
+    
+    sock_table = Table(sock_data, colWidths=[1.2*inch, 0.8*inch, 1.2*inch, 0.8*inch, 1.2*inch])
+    sock_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(sock_table)
+    elements.append(Spacer(1, 15))
+    
     # Conclusion Section
     conclusion_val = st.session_state.get('conclusion', '')
+    conclusion_label = f"{get_pdf_text('conclusion', pdf_lang)}:"
     conclusion_row = [
-        create_paragraph("Conclusion 结论：", bold=True),
+        create_paragraph(conclusion_label, bold=True),
         create_paragraph(conclusion_val, ParagraphStyle('Conclusion', parent=normal_style, fontSize=9, alignment=TA_LEFT))
     ]
     
@@ -823,13 +932,8 @@ def generate_pdf():
     elements.append(conclusion_table)
     elements.append(Spacer(1, 20))
     
-    # Disclaimer Section
-    disclaimer_en = "Note: This review information does not release the factory from any responsibilities in the event of claims being received from our customer."
-    disclaimer_zh = "以上不免除我客人收到货后索赔而引起的货物供应商(工厂)的任何责任."
-    
-    elements.append(create_paragraph(disclaimer_en, ParagraphStyle('Disclaimer', parent=normal_style, fontSize=8, alignment=TA_LEFT)))
-    elements.append(Spacer(1, 5))
-    elements.append(create_paragraph(disclaimer_zh, ParagraphStyle('Disclaimer', parent=normal_style, fontSize=8, alignment=TA_LEFT)))
+    # Disclaimer Section - Single language
+    elements.append(create_paragraph(get_pdf_text("disclaimer", pdf_lang), ParagraphStyle('Disclaimer', parent=normal_style, fontSize=8, alignment=TA_LEFT)))
     elements.append(Spacer(1, 15))
     
     # Signatures
@@ -838,15 +942,15 @@ def generate_pdf():
     
     signature_data = [
         [
-            create_paragraph("GrandStep Tech:", bold=True),
+            create_paragraph(get_pdf_text("grandstep_tech", pdf_lang), bold=True),
             create_paragraph(grandstep_tech_val),
             create_paragraph(""),
-            create_paragraph("Factory Representative:", bold=True),
+            create_paragraph(get_pdf_text("factory_rep", pdf_lang), bold=True),
             create_paragraph(factory_rep_val)
         ]
     ]
     
-    signature_table = Table(signature_data, colWidths=[1.2*inch, 2*inch, 0.5*inch, 1.5*inch, 2*inch])
+    signature_table = Table(signature_data, colWidths=[1.5*inch, 2*inch, 0.5*inch, 1.5*inch, 2*inch])
     signature_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
@@ -917,8 +1021,12 @@ with st.sidebar:
     
     # Sample Types Information
     st.markdown(f'#### {ICONS["info"]} Sample Types')
-    for eng, chi in SAMPLE_TYPES.items():
-        st.markdown(f'<div class="sample-type-badge">{eng}: {chi}</div>', unsafe_allow_html=True)
+    if ui_language == "English":
+        for eng, desc in SAMPLE_TYPES_EN.items():
+            st.markdown(f'<div class="sample-type-badge">{eng}: {desc}</div>', unsafe_allow_html=True)
+    else:
+        for eng, chi in SAMPLE_TYPES_ZH.items():
+            st.markdown(f'<div class="sample-type-badge">{eng}: {chi}</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown(f'### {ICONS["info"]} Instructions')
@@ -985,7 +1093,7 @@ with tab1:
         
         purpose = st.selectbox(
             f"{ICONS['info']} {get_text('purpose')}",
-            list(SAMPLE_TYPES.keys()),
+            list(SAMPLE_TYPES_EN.keys()),
             key="purpose"
         )
         
@@ -1038,68 +1146,47 @@ with tab2:
     with col_left:
         st.markdown(f"#### {ICONS['measure']} Check Items")
         
-        # Check Items
-        measurements_left = [
-            ("Last Length", "楦长"),
-            ("Toe Girth", "趾围"),
-            ("Ball Girth", "掌围"),
-            ("Waist Girth", "腰围"),
-            ("Instep Girth", "背围"),
-            ("Vamp length", "鞋口长度"),
-            ("Back Height", "后跟高度"),
-            ("Boot Height", "靴筒高度"),
-            ("Boot top Width", "靴筒宽度"),
-            ("Boot Calf Width", "小腿宽度Point 位置点 298"),
-            ("Ankle Width", "脚踝宽度 Point 位置点 90mm")
-        ]
+        # Show English measurements in UI regardless of language
+        measurements_left = MEASUREMENT_ITEMS_EN["left"]
         
-        for item_en, item_zh in measurements_left:
-            st.markdown(f"**{item_en} / {item_zh}**")
+        for item_en, item_key in measurements_left:
+            st.markdown(f"**{item_en}**")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.text_input("First", key=f"{item_en.lower().replace(' ', '_')}_first", label_visibility="collapsed")
+                st.text_input("First", key=f"{item_key.lower().replace(' ', '_')}_first", label_visibility="collapsed")
             with col2:
-                st.text_input("Second", key=f"{item_en.lower().replace(' ', '_')}_second", label_visibility="collapsed")
+                st.text_input("Second", key=f"{item_key.lower().replace(' ', '_')}_second", label_visibility="collapsed")
             with col3:
-                st.text_input("Third", key=f"{item_en.lower().replace(' ', '_')}_third", label_visibility="collapsed")
+                st.text_input("Third", key=f"{item_key.lower().replace(' ', '_')}_third", label_visibility="collapsed")
             with col4:
-                st.text_input("Fourth", key=f"{item_en.lower().replace(' ', '_')}_fourth", label_visibility="collapsed")
+                st.text_input("Fourth", key=f"{item_key.lower().replace(' ', '_')}_fourth", label_visibility="collapsed")
     
     with col_right:
         st.markdown(f"#### {ICONS['measure']} Check Items")
         
-        # Check Items
-        measurements_right = [
-            ("Toe Width", "趾宽"),
-            ("Bottom Width", "掌宽"),
-            ("Heel Seat Width", "后跟宽度"),
-            ("Heel to Instep Girth", "后跟到脚背长度"),
-            ("Toe Spring", "鞋头翘度"),
-            ("Thickness", "厚度"),
-            ("Shank", "钢芯"),
-            ("Mid-sole", "中底"),
-            ("Outsole Degree", "大底硬度")
-        ]
+        # Show English measurements in UI regardless of language
+        measurements_right = MEASUREMENT_ITEMS_EN["right"]
         
-        for item_en, item_zh in measurements_right:
-            st.markdown(f"**{item_en} / {item_zh}**")
-            col1, col2, col3, col4 = st.columns(4)
-            with col1:
-                st.text_input("First", key=f"{item_en.lower().replace(' ', '_')}_first", label_visibility="collapsed")
-            with col2:
-                st.text_input("Second", key=f"{item_en.lower().replace(' ', '_')}_second", label_visibility="collapsed")
-            with col3:
-                st.text_input("Third", key=f"{item_en.lower().replace(' ', '_')}_third", label_visibility="collapsed")
-            with col4:
-                st.text_input("Fourth", key=f"{item_en.lower().replace(' ', '_')}_fourth", label_visibility="collapsed")
-        
-        # Sock Foam special section
-        st.markdown("**Sock Foam / 鞋垫**")
-        sock_col1, sock_col2 = st.columns(2)
-        with sock_col1:
-            st.text_input("After / 后置", key="sock_foam_after")
-        with sock_col2:
-            st.text_input("Before / 前置", key="sock_foam_before")
+        for i, (item_en, item_key) in enumerate(measurements_right):
+            if item_en == "Sock Foam":
+                # Special handling for Sock Foam
+                st.markdown("**Sock Foam**")
+                sock_col1, sock_col2 = st.columns(2)
+                with sock_col1:
+                    st.text_input("After", key="sock_foam_after", label_visibility="collapsed")
+                with sock_col2:
+                    st.text_input("Before", key="sock_foam_before", label_visibility="collapsed")
+            else:
+                st.markdown(f"**{item_en}**")
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.text_input("First", key=f"{item_key.lower().replace(' ', '_')}_first", label_visibility="collapsed")
+                with col2:
+                    st.text_input("Second", key=f"{item_key.lower().replace(' ', '_')}_second", label_visibility="collapsed")
+                with col3:
+                    st.text_input("Third", key=f"{item_key.lower().replace(' ', '_')}_third", label_visibility="collapsed")
+                with col4:
+                    st.text_input("Fourth", key=f"{item_key.lower().replace(' ', '_')}_fourth", label_visibility="collapsed")
 
 with tab3:
     # Conclusion and Signatures Section
@@ -1111,7 +1198,7 @@ with tab3:
     """, unsafe_allow_html=True)
     
     conclusion = st.text_area(
-        "Conclusion / 结论",
+        "Conclusion",
         placeholder="Enter overall conclusion and notes here...",
         height=150,
         key="conclusion"
@@ -1145,7 +1232,6 @@ with tab3:
     st.markdown("---")
     st.markdown(f"#### {ICONS['warning']} {get_text('disclaimer')}")
     st.warning(get_text("disclaimer_text"))
-    st.info(get_text("disclaimer_text_chinese"))
 
 # Generate PDF Button
 st.markdown("---")
