@@ -6,7 +6,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics PDF Preview Features
+from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.graphics.shapes import Drawing, Rect
@@ -1247,7 +1247,25 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # PDF Preview Section
-
+st.markdown("""
+<div class="pdf-preview">
+    <h3 style='color: #667eea; text-align: center;'>📄 PDF Preview Features</h3>
+    <div style='display: flex; justify-content: space-around; margin-top: 1rem;'>
+        <div style='text-align: center;'>
+            <div style='background: #667eea; color: white; padding: 0.5rem; border-radius: 5px;'>Professional Design</div>
+            <small>Color-coded sections</small>
+        </div>
+        <div style='text-align: center;'>
+            <div style='background: #764ba2; color: white; padding: 0.5rem; border-radius: 5px;'>Bilingual Support</div>
+            <small>Pure English/Chinese PDFs</small>
+        </div>
+        <div style='text-align: center;'>
+            <div style='background: #4CAF50; color: white; padding: 0.5rem; border-radius: 5px;'>Enhanced Layout</div>
+            <small>Better alignment & spacing</small>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # Create tabs for better organization
 tab1, tab2, tab3 = st.tabs([
