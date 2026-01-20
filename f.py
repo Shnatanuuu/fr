@@ -317,7 +317,7 @@ def translate_text(text, target_language="zh"):
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": f"You are a professional translator. Translate the following text to {target_language}. Only return the translation, no explanations. Preserve any numbers, dates, and special formatting."},
+                {"role": "system", "content": f"You are a professional translator. Translate the following text to {'Chinese (Mandarin)' if target_language == 'zh' else 'English'}. Only return the translation, no explanations. Preserve any numbers, dates, and special formatting."},
                 {"role": "user", "content": text}
             ],
             temperature=0.1,
@@ -331,6 +331,19 @@ def translate_text(text, target_language="zh"):
         st.warning(f"Translation failed: {str(e)}. Using original text.")
         st.session_state.translations_cache[cache_key] = text
         return text
+
+# Helper function to translate user content
+def translate_user_content(text, target_language="zh"):
+    """Translate user-filled content to target language"""
+    if not text or not text.strip():
+        return text
+    
+    if target_language == "en":
+        # If target is English, return as is (assuming user entered in English)
+        return text
+    
+    # Translate to Chinese
+    return translate_text(text, target_language)
 
 # Helper function to get translated text with caching
 def get_text(key, fallback=None):
@@ -726,7 +739,7 @@ def generate_pdf():
     elements.append(Paragraph(get_pdf_text("page_num", pdf_lang), subtitle_style))
     elements.append(Spacer(1, 10))
     
-    # Get values from session state
+    # Get values from session state and translate if needed
     style_no_val = st.session_state.get('style_no', '')
     size_val = st.session_state.get('size', '')
     factory_val = st.session_state.get('factory', '')
@@ -737,6 +750,17 @@ def generate_pdf():
     new_old_val = st.session_state.get('new_old', '')
     outsole_no_val = st.session_state.get('outsole_no', '')
     review_date_val = st.session_state.get('review_date', datetime.now())
+    
+    # Translate user-filled content if PDF language is Chinese
+    if pdf_lang == "zh":
+        style_no_val = translate_user_content(style_no_val, "zh")
+        size_val = translate_user_content(size_val, "zh")
+        factory_val = translate_user_content(factory_val, "zh")
+        brand_val = translate_user_content(brand_val, "zh")
+        last_no_val = translate_user_content(last_no_val, "zh")
+        sales_val = translate_user_content(sales_val, "zh")
+        new_old_val = translate_user_content(new_old_val, "zh")
+        outsole_no_val = translate_user_content(outsole_no_val, "zh")
     
     # Get appropriate sample type based on language
     if pdf_lang == "zh":
@@ -825,6 +849,13 @@ def generate_pdf():
                 second_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_second', '')
                 third_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_third', '')
                 fourth_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_fourth', '')
+                
+                # Translate measurement values if PDF language is Chinese
+                if pdf_lang == "zh":
+                    first_val = translate_user_content(first_val, "zh") if first_val else ''
+                    second_val = translate_user_content(second_val, "zh") if second_val else ''
+                    third_val = translate_user_content(third_val, "zh") if third_val else ''
+                    fourth_val = translate_user_content(fourth_val, "zh") if fourth_val else ''
             else:
                 first_val = second_val = third_val = fourth_val = ''
             
@@ -858,6 +889,13 @@ def generate_pdf():
                 second_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_second', '')
                 third_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_third', '')
                 fourth_val = st.session_state.get(f'{eng_item.lower().replace(" ", "_")}_fourth', '')
+                
+                # Translate measurement values if PDF language is Chinese
+                if pdf_lang == "zh":
+                    first_val = translate_user_content(first_val, "zh") if first_val else ''
+                    second_val = translate_user_content(second_val, "zh") if second_val else ''
+                    third_val = translate_user_content(third_val, "zh") if third_val else ''
+                    fourth_val = translate_user_content(fourth_val, "zh") if fourth_val else ''
             else:
                 first_val = second_val = third_val = fourth_val = ''
             
@@ -895,6 +933,11 @@ def generate_pdf():
     sock_foam_after = st.session_state.get('sock_foam_after', '')
     sock_foam_before = st.session_state.get('sock_foam_before', '')
     
+    # Translate sock foam values if PDF language is Chinese
+    if pdf_lang == "zh":
+        sock_foam_after = translate_user_content(sock_foam_after, "zh") if sock_foam_after else ''
+        sock_foam_before = translate_user_content(sock_foam_before, "zh") if sock_foam_before else ''
+    
     sock_data = [
         [
             create_paragraph(sock_foam_label, bold=True),
@@ -917,6 +960,11 @@ def generate_pdf():
     
     # Conclusion Section
     conclusion_val = st.session_state.get('conclusion', '')
+    
+    # Translate conclusion if PDF language is Chinese
+    if pdf_lang == "zh":
+        conclusion_val = translate_user_content(conclusion_val, "zh") if conclusion_val else ''
+    
     conclusion_label = f"{get_pdf_text('conclusion', pdf_lang)}:"
     conclusion_row = [
         create_paragraph(conclusion_label, bold=True),
@@ -939,6 +987,11 @@ def generate_pdf():
     # Signatures
     grandstep_tech_val = st.session_state.get('grandstep_tech', '')
     factory_rep_val = st.session_state.get('factory_representative', '')
+    
+    # Translate signature names if PDF language is Chinese
+    if pdf_lang == "zh":
+        grandstep_tech_val = translate_user_content(grandstep_tech_val, "zh") if grandstep_tech_val else ''
+        factory_rep_val = translate_user_content(factory_rep_val, "zh") if factory_rep_val else ''
     
     signature_data = [
         [
