@@ -85,19 +85,15 @@ CHINESE_CITIES = {
 SAMPLE_TYPES_EN = {
     "Dev.sample": "Development Sample",
     "Cfm sample": "Confirmation Sample",
-    "Fit sample": "Fitting Sample",
-    "Size set": "Size Set Sample",
-    "TOP sample": "Production Sample",
-    "Shipment sample": "Shipment Sample"
+    "Fit sample": "Fitting Sample"
+
 }
 
 SAMPLE_TYPES_ZH = {
     "Dev.sample": "开发样",
     "Cfm sample": "确认样",
-    "Fit sample": "试穿样",
-    "Size set": "尺码套样",
-    "TOP sample": "大货样",
-    "Shipment sample": "船样"
+    "Fit sample": "试穿样"
+
 }
 
 # Custom icons
